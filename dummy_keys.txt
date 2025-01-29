@@ -1,0 +1,20 @@
+Mote: these are only for testing, not used for anything so they can go in github
+
+Don't use 'em for anything. 
+
+
+Secret phrase:       december category reunion horse brick case hazard abandon claw zoo card faint
+  Network ID:        substrate
+  Secret seed:       0xf5aff394130d41ed498b065e5c3ed880f0eca8a3c67b59f087e1e413eece8b85
+  Public key (hex):  0xd8bbfd56612d46e4fa67bc517b182e1b28dcf242c81c86e8057a62c0f160f266
+  Account ID:        0xd8bbfd56612d46e4fa67bc517b182e1b28dcf242c81c86e8057a62c0f160f266
+  Public key (SS58): 5Gxt3Z4y54FvPYUc7YwpReCdViL7Ca6YmcxF3N3NgN3vAaua
+  SS58 Address:      5Gxt3Z4y54FvPYUc7YwpReCdViL7Ca6YmcxF3N3NgN3vAaua
+Secret phrase:       cabin interest post laundry reduce runway hurry crazy spy assist entire pond
+
+  Network ID:        substrate
+  Secret seed:       0x33315b5a9f5bc18e0d1e6e17467723270ea8ab126d145dd7e3ab9c3bd146e625
+  Public key (hex):  0x2cea9b8237b227b863fc340abda27793dc7f74081c0301e99386bdfa322ba05a
+  Account ID:        0x2cea9b8237b227b863fc340abda27793dc7f74081c0301e99386bdfa322ba05a
+  Public key (SS58): 5D5bf4bm4B4975eBFrnHmvjgJuxdRVEMrLiLmby79jpPKhd3
+  SS58 Address:      5D5bf4bm4B4975eBFrnHmvjgJuxdRVEMrLiLmby79jpPKhd3

@@ -5,6 +5,12 @@ homepage = "https://paritytech.github.io/polkadot-sdk/"
 repository = "https://github.com/paritytech/polkadot-sdk-solochain-template.git"
 edition = "2021"
 
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+
 [workspace]
 members = [
     "node",
