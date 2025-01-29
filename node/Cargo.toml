@@ -37,16 +37,8 @@ sc-transaction-pool-api.workspace = true
 sc-transaction-pool-api.default-features = true
 sc-offchain.workspace = true
 sc-offchain.default-features = true
-sc-consensus-aura.workspace = true
-sc-consensus-aura.default-features = true
-sp-consensus-aura.workspace = true
-sp-consensus-aura.default-features = true
 sc-consensus.workspace = true
 sc-consensus.default-features = true
-sc-consensus-grandpa.workspace = true
-sc-consensus-grandpa.default-features = true
-sp-consensus-grandpa.workspace = true
-sp-consensus-grandpa.default-features = true
 sc-client-api.workspace = true
 sc-client-api.default-features = true
 sc-basic-authorship.workspace = true
@@ -80,6 +72,8 @@ substrate-frame-rpc-system.default-features = true
 frame-benchmarking-cli.workspace = true
 frame-benchmarking-cli.default-features = true
 solochain-template-runtime.workspace = true
+sp-consensus-pow = "0.41.0"
+sc-consensus-pow = "0.47.0"
 
 [build-dependencies]
 substrate-build-script-utils.workspace = true

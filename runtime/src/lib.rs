@@ -1,6 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(feature = "std")]
+// TODO don't know what this is but it caused errors..
+// #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 pub mod apis;
@@ -48,12 +49,20 @@ pub mod opaque {
 	pub type Hash = <BlakeTwo256 as HashT>::Output;
 }
 
-impl_opaque_keys! {
-	pub struct SessionKeys {
-		pub aura: Aura,
-		pub grandpa: Grandpa,
-	}
-}
+// impl_opaque_keys! {
+// 	pub struct SessionKeys {
+// 		pub aura: Aura,
+// 		pub grandpa: Grandpa,
+// 	}
+// }
+
+// // Example: PoW configuration in runtime - TODO - delete ? !
+// impl pallet_pow::Config for Runtime {
+//     type Algorithm = sc_consensus_pow::Sha3Algorithm; // Replace with your chosen algorithm
+//     type DifficultyAdjuster = sc_consensus_pow::DifficultyAdjuster<Self>;
+//     type Event = Event;
+//     // ... other associated types
+// }
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
@@ -203,11 +212,13 @@ mod runtime {
 	#[runtime::pallet_index(1)]
 	pub type Timestamp = pallet_timestamp;
 
-	#[runtime::pallet_index(2)]
-	pub type Aura = pallet_aura;
+	// TODO what is  this runtime pallet business
+	
+	// #[runtime::pallet_index(2)]
+	// pub type Aura = pallet_aura;
 
-	#[runtime::pallet_index(3)]
-	pub type Grandpa = pallet_grandpa;
+	// #[runtime::pallet_index(3)]
+	// pub type Grandpa = pallet_grandpa;
 
 	#[runtime::pallet_index(4)]
 	pub type Balances = pallet_balances;
