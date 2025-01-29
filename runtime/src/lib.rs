@@ -1,6 +1,4 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-
-// TODO don't know what this is but it caused errors..
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
