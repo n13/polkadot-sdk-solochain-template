@@ -1,7 +1,6 @@
-use sp_consensus_pow::{Error as PowError, PowAlgorithm};
+use sc_consensus_pow::{Error as PowError, PowAlgorithm, PowBlockImport};
 use sp_runtime::{
-    traits::{Header as HeaderT, NumberFor},
-    DigestItem,
+    generic::Block as GenericBlock, traits::{Extrinsic, Header as HeaderT, NumberFor}, DigestItem
 };
 use sp_core::{U256, Encode};
 use sha3::{Digest, Sha3_256};
@@ -13,23 +12,23 @@ use solochain_template_runtime::opaque::Block; // Adjust to your runtime's block
 /// 3) Checks if the result is < a fixed difficulty.
 pub struct SimplePowAlgorithm;
 
-impl<H> PowAlgorithm<H> for SimplePowAlgorithm
+impl<Header> PowAlgorithm<GenericBlock<Header, Extrinsic>> for SimplePowAlgorithm
 where
-    H: HeaderT<Number = NumberFor<Block>>, // your block's header
+    Header: HeaderT<Number = NumberFor<Block>>,
 {
     type Difficulty = U256;
 
-    fn difficulty(&self, _parent: &H) -> Result<Self::Difficulty, PowError<H>> {
+    fn difficulty(&self, _parent: &GenericBlock<Header, Extrinsic>) -> Result<Self::Difficulty, PowError<GenericBlock<Header, Extrinsic>>> {
         // For simplicity, return a constant difficulty. Real world PoW would adjust it.
         Ok(U256::from(0x0000_0000_0000_ffffu64))
     }
 
     fn verify(
         &self,
-        header: &H,
-        parent: &H,
+        header: &GenericBlock<Header, Extrinsic>,
+        parent: &GenericBlock<Header, Extrinsic>,
         difficulty: Self::Difficulty,
-    ) -> Result<bool, PowError<H>> {
+    ) -> Result<bool, PowError<GenericBlock<Header, Extrinsic>>> {
         // 1) Extract the nonce from the block header's digest
         let mut nonce_bytes = [0u8; 8];
         let mut found_nonce = false;
@@ -59,11 +58,22 @@ where
         // 3) Compare with difficulty
         Ok(hash_result <= difficulty)
     }
+    
+    fn preliminary_verify(
+            &self,
+            _pre_hash: &<GenericBlock<Header, Extrinsic>>::Hash,
+            _seal: &sp_consensus_pow::Seal,
+        ) -> Result<Option<bool>, PowError<GenericBlock<Header, Extrinsic>>> {
+            Ok(None)
+        }
+    
+    fn break_tie(&self, _own_seal: &sp_consensus_pow::Seal, _new_seal: &sp_consensus_pow::Seal) -> bool {
+            false
+        }
 }
 
 use std::sync::Arc;
 use sc_client_api::HeaderBackend;
-use sp_consensus_pow::PowBlockImport;
 use sc_service::SpawnTaskHandle;
 use sp_api::ProvideRuntimeApi;
 

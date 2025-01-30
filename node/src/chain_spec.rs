@@ -40,10 +40,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	.with_id("dev")
 	.with_chain_type(ChainType::Development)
 	.with_genesis_config_patch(testnet_genesis(
-		// Initial PoA authorities
-		vec![authority_keys_from_seed("Alice")],
-		// Sudo account
-		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		// Sudo account (root key)
+		get_account_id_from_seed::<sr25519::Public>("Alice"), // Ensure this is the root key
 		// Pre-funded accounts
 		vec![
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -51,8 +49,9 @@ pub fn development_config() -> Result<ChainSpec, String> {
 			get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 			get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 		],
-		// true,
-	))
+		// Enable println
+		true, // or false, depending on your requirement
+	))	
 	.build())
 }
 
@@ -65,10 +64,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 	.with_id("local_testnet")
 	.with_chain_type(ChainType::Local)
 	.with_genesis_config_patch(testnet_genesis(
-		// Initial PoA authorities
-		vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
-		// Sudo account
-		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		// Sudo account (root key)
+		get_account_id_from_seed::<sr25519::Public>("Alice"), // Ensure this is the root key
 		// Pre-funded accounts
 		vec![
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -84,7 +81,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 			get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 			get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 		],
-		// true,
+		// Enable println
+		true, // or false, depending on your requirement
 	))
 	.build())
 }

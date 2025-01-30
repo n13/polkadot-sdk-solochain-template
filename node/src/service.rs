@@ -14,10 +14,9 @@ use sc_network::config::FullNetworkConfiguration;
 use sp_runtime::traits::Block as BlockT;
 use sp_consensus::SyncOracle;
 use sp_inherents::CreateInherentDataProviders;
-use sc_consensus::{LongestChain, NeverDefault}; // Consensus utilities
+use sc_consensus::LongestChain; // Consensus utilities
 
-use sc_consensus_pow::{start_mining_worker, PowBlockImport, import_queue as pow_import_queue};
-use sp_consensus_pow::PowAlgorithm;
+use sc_consensus_pow::{start_mining_worker, PowBlockImport, PowAlgorithm, import_queue as pow_import_queue};
 use sc_basic_authorship::ProposerFactory;
 
 use solochain_template_runtime::{self, apis::RuntimeApi, opaque::Block};

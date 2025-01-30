@@ -74,6 +74,8 @@ frame-benchmarking-cli.default-features = true
 solochain-template-runtime.workspace = true
 sp-consensus-pow = "0.41.0"
 sc-consensus-pow = "0.47.0"
+sp-consensus = "0.41.0"
+sha3 = "0.10.8"
 
 [build-dependencies]
 substrate-build-script-utils.workspace = true
