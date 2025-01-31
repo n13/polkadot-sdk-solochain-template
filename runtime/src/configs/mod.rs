@@ -45,6 +45,8 @@ use super::{
 	System, EXISTENTIAL_DEPOSIT, SLOT_DURATION, VERSION,
 };
 
+use pallet_staking::{DefaultDoneSlashHandler, weights::SubstrateWeight};
+
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 
 parameter_types! {
@@ -133,7 +135,8 @@ impl pallet_balances::Config for Runtime {
 	type FreezeIdentifier = RuntimeFreezeReason;
 	type MaxFreezes = VariantCountOf<RuntimeFreezeReason>;
 	type RuntimeHoldReason = RuntimeHoldReason;
-	type RuntimeFreezeReason = RuntimeHoldReason;
+	type RuntimeFreezeReason = RuntimeHoldReason;	
+	type DoneSlashHandler = pallet_staking::DefaultDoneSlashHandler;
 }
 
 parameter_types! {
@@ -147,6 +150,7 @@ impl pallet_transaction_payment::Config for Runtime {
 	type WeightToFee = IdentityFee<Balance>;
 	type LengthToFee = IdentityFee<Balance>;
 	type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
+	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
 }
 
 impl pallet_sudo::Config for Runtime {
