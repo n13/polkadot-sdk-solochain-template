@@ -7,7 +7,7 @@ use crate::{
 use frame_benchmarking_cli::{BenchmarkCmd, ExtrinsicFactory, SUBSTRATE_REFERENCE_HARDWARE};
 use sc_cli::SubstrateCli;
 use sc_service::PartialComponents;
-use solochain_template_runtime::{Block, EXISTENTIAL_DEPOSIT};
+use resonance_runtime_1::{Block, EXISTENTIAL_DEPOSIT};
 use sp_keyring::Sr25519Keyring;
 
 impl SubstrateCli for Cli {
@@ -95,7 +95,8 @@ pub fn run() -> sc_cli::Result<()> {
 				let PartialComponents { client, task_manager, backend, .. } =
 					service::new_partial(&config)?;
 				let aux_revert = Box::new(|client, _, blocks| {
-					sc_consensus_grandpa::revert(client, blocks)?;
+					// sc_consensus_grandpa::revert(client, blocks)?;
+					unimplemented!("error");
 					Ok(())
 				});
 				Ok((cmd.run(client, backend, Some(aux_revert)), task_manager))
@@ -180,8 +181,8 @@ pub fn run() -> sc_cli::Result<()> {
 				match config.network.network_backend {
 					sc_network::config::NetworkBackendType::Libp2p => service::new_full::<
 						sc_network::NetworkWorker<
-							solochain_template_runtime::opaque::Block,
-							<solochain_template_runtime::opaque::Block as sp_runtime::traits::Block>::Hash,
+							resonance_runtime_1::opaque::Block,
+							<resonance_runtime_1::opaque::Block as sp_runtime::traits::Block>::Hash,
 						>,
 					>(config)
 					.map_err(sc_cli::Error::Service),

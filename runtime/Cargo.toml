@@ -1,5 +1,5 @@
 [package]
-name = "solochain-template-runtime"
+name = "resonance-runtime-1"
 description = "A solochain runtime template built with Substrate, part of Polkadot Sdk."
 version = "0.1.0"
 license = "Unlicense"
@@ -13,8 +13,6 @@ publish = false
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-sp-consensus-pow = { workspace = true, default-features = false }
-sp-externalities = { version = "0.29.0", default-features = false }
 codec = { features = [
 	"derive",
 ], workspace = true }
@@ -27,16 +25,12 @@ frame-system.workspace = true
 frame-try-runtime = { optional = true, workspace = true }
 frame-executive.workspace = true
 frame-metadata-hash-extension.workspace = true
-pallet-aura.workspace = true
 pallet-balances.workspace = true
-pallet-grandpa.workspace = true
 pallet-sudo.workspace = true
 pallet-timestamp.workspace = true
 pallet-transaction-payment.workspace = true
 sp-api.workspace = true
 sp-block-builder.workspace = true
-sp-consensus-aura = { features = ["serde"], workspace = true }
-sp-consensus-grandpa = { features = ["serde"], workspace = true }
 sp-core = { features = ["serde"], workspace = true }
 sp-inherents.workspace = true
 sp-offchain.workspace = true
@@ -71,9 +65,7 @@ std = [
 	"frame-benchmarking?/std",
 	"frame-try-runtime?/std",
 
-	"pallet-aura/std",
 	"pallet-balances/std",
-	"pallet-grandpa/std",
 	"pallet-sudo/std",
 	"pallet-template/std",
 	"pallet-timestamp/std",
@@ -82,8 +74,6 @@ std = [
 
 	"sp-api/std",
 	"sp-block-builder/std",
-	"sp-consensus-aura/std",
-	"sp-consensus-grandpa/std",
 	"sp-core/std",
 	"sp-genesis-builder/std",
 	"sp-inherents/std",
@@ -103,7 +93,6 @@ runtime-benchmarks = [
 	"frame-system-benchmarking/runtime-benchmarks",
 	"frame-system/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
-	"pallet-grandpa/runtime-benchmarks",
 	"pallet-sudo/runtime-benchmarks",
 	"pallet-template/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
@@ -115,9 +104,7 @@ try-runtime = [
 	"frame-support/try-runtime",
 	"frame-system/try-runtime",
 	"frame-try-runtime/try-runtime",
-	"pallet-aura/try-runtime",
 	"pallet-balances/try-runtime",
-	"pallet-grandpa/try-runtime",
 	"pallet-sudo/try-runtime",
 	"pallet-template/try-runtime",
 	"pallet-timestamp/try-runtime",

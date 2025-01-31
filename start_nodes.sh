@@ -6,40 +6,6 @@ pkill -f solochain-template-node
 # Clean up old chain data
 rm -rf /tmp/validator1 /tmp/validator2 /tmp/listener
 
-# ----------------------------------------
-# 1) Insert keys for Validator1 (Alice)
-# ----------------------------------------
-./target/release/solochain-template-node key insert \
-  --base-path /tmp/validator1 \
-  --chain custom-spec-raw.json \
-  --scheme Sr25519 \
-  --suri "//Alice" \
-  --key-type aura
-
-./target/release/solochain-template-node key insert \
-  --base-path /tmp/validator1 \
-  --chain custom-spec-raw.json \
-  --scheme Ed25519 \
-  --suri "//Alice" \
-  --key-type gran
-
-# ----------------------------------------
-# 2) Insert keys for Validator2 (Bob)
-# ----------------------------------------
-./target/release/solochain-template-node key insert \
-  --base-path /tmp/validator2 \
-  --chain custom-spec-raw.json \
-  --scheme Sr25519 \
-  --suri "//Bob" \
-  --key-type aura
-
-./target/release/solochain-template-node key insert \
-  --base-path /tmp/validator2 \
-  --chain custom-spec-raw.json \
-  --scheme Ed25519 \
-  --suri "//Bob" \
-  --key-type gran
-
 # -----------------------------
 # 1) Start Validator1
 #    WebSocket on 127.0.0.1:9944

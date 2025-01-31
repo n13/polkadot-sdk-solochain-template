@@ -5,24 +5,24 @@ homepage = "https://paritytech.github.io/polkadot-sdk/"
 repository = "https://github.com/paritytech/polkadot-sdk-solochain-template.git"
 edition = "2021"
 
-[source.crates-io]
-replace-with = "vendored-sources"
-
-[source.vendored-sources]
-directory = "vendor"
-
 [workspace]
 members = [
     "node",
     "pallets/template",
+    "pallets/sp-consensus-pow",
+    "pallets/sc-consensus-pow",
     "runtime",
 ]
 resolver = "2"
 
 [workspace.dependencies]
-sp-consensus-pow = { version = "0.41.0", default-features = false }
-sc-consensus-pow = { version = "0.47.0", default-features = false }
-solochain-template-runtime = { path = "./runtime", default-features = false }
+async-trait = "0.1.79"
+futures-timer = "3.0.2"
+log = { version = "0.4.22", default-features = true }
+parking_lot = { version = "0.12.1", default-features = true }
+prometheus-endpoint = { version = "0.17.1", default-features = true, package = "substrate-prometheus-endpoint" }
+
+resonance-runtime-1 = { path = "./runtime", default-features = false }
 pallet-template = { path = "./pallets/template", default-features = false }
 clap = { version = "4.5.10" }
 frame-benchmarking-cli = { version = "43.0.0", default-features = false }
@@ -36,8 +36,6 @@ sc-basic-authorship = { version = "0.45.0", default-features = false }
 sc-cli = { version = "0.47.0", default-features = false }
 sc-client-api = { version = "37.0.0", default-features = false }
 sc-consensus = { version = "0.44.0", default-features = false }
-sc-consensus-aura = { version = "0.45.0", default-features = false }
-sc-consensus-grandpa = { version = "0.30.0", default-features = false }
 sc-executor = { version = "0.40.1", default-features = false }
 sc-network = { version = "0.45.0", default-features = false }
 sc-offchain = { version = "40.0.0", default-features = false }
@@ -49,13 +47,13 @@ serde_json = { version = "1.0.127", default-features = false }
 sp-api = { version = "34.0.0", default-features = false }
 sp-block-builder = { version = "34.0.0", default-features = false }
 sp-blockchain = { version = "37.0.1", default-features = false }
-sp-consensus-aura = { version = "0.40.0", default-features = false }
-sp-consensus-grandpa = { version = "21.0.0", default-features = false }
+sp-consensus = { version = "0.40.0", default-features = true }
+thiserror = "1.0.64"
 sp-core = { version = "34.0.0", default-features = false }
 sp-inherents = { version = "34.0.0", default-features = false }
 sp-io = { version = "38.0.0", default-features = false }
 sp-keyring = { version = "39.0.0", default-features = false }
-sp-runtime = { version = "39.0.1", default-features = false }
+sp-runtime = { version = "39.0.5", default-features = false }
 sp-timestamp = { version = "34.0.0", default-features = false }
 substrate-frame-rpc-system = { version = "39.0.0", default-features = false }
 substrate-build-script-utils = { version = "11.0.0", default-features = false }
@@ -66,9 +64,7 @@ frame-support = { version = "38.0.0", default-features = false }
 frame-system-benchmarking = { version = "38.0.0", default-features = false }
 frame-system-rpc-runtime-api = { version = "34.0.0", default-features = false }
 frame-try-runtime = { version = "0.44.0", default-features = false }
-pallet-aura = { version = "37.0.0", default-features = false }
 pallet-balances = { version = "39.0.0", default-features = false }
-pallet-grandpa = { version = "38.0.0", default-features = false }
 pallet-sudo = { version = "38.0.0", default-features = false }
 pallet-timestamp = { version = "37.0.0", default-features = false }
 pallet-transaction-payment-rpc-runtime-api = { version = "38.0.0", default-features = false }

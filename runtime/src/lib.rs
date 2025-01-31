@@ -48,19 +48,19 @@ pub mod opaque {
 	pub type Hash = <BlakeTwo256 as HashT>::Output;
 }
 
-impl_opaque_keys! {
-	pub struct SessionKeys {
-		pub aura: Aura,
-		pub grandpa: Grandpa,
-	}
-}
+// impl_opaque_keys! {
+// 	pub struct SessionKeys {
+// 		pub aura: Aura,
+// 		pub grandpa: Grandpa,
+// 	}
+// }
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("solochain-template-runtime"),
-	impl_name: create_runtime_str!("solochain-template-runtime"),
+	spec_name: create_runtime_str!("resonance-runtime-1"),
+	impl_name: create_runtime_str!("resonance-runtime-1"),
 	authoring_version: 1,
 	// The version of the runtime specification. A full node will not attempt to use its native
 	//   runtime in substitute for the on-chain Wasm runtime unless all of `spec_name`,
@@ -202,12 +202,6 @@ mod runtime {
 
 	#[runtime::pallet_index(1)]
 	pub type Timestamp = pallet_timestamp;
-
-	#[runtime::pallet_index(2)]
-	pub type Aura = pallet_aura;
-
-	#[runtime::pallet_index(3)]
-	pub type Grandpa = pallet_grandpa;
 
 	#[runtime::pallet_index(4)]
 	pub type Balances = pallet_balances;

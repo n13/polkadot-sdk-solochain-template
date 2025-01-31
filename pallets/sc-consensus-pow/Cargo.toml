@@ -1,0 +1,163 @@
+[package]
+edition = "2021"
+name = "sc-consensus-pow"
+version = "0.47.0"
+authors = ["Parity Technologies <admin@parity.io>"]
+build = false
+autolib = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+description = "PoW consensus algorithm for substrate"
+homepage = "https://paritytech.github.io/polkadot-sdk/"
+readme = "README.md"
+license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
+repository = "https://github.com/paritytech/polkadot-sdk.git"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[lib]
+name = "sc_consensus_pow"
+path = "src/lib.rs"
+
+[dependencies]
+async-trait = { workspace = true }
+codec = { workspace = true }
+futures = { workspace = true }
+futures-timer = { workspace = true }
+log = { workspace = true }
+parking_lot = { workspace = true }
+prometheus-endpoint = { workspace = true }
+sc-client-api = { workspace = true }
+sc-consensus = { workspace = true }
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-blockchain = { workspace = true }
+sp-consensus = { workspace = true }
+sp-consensus-pow = { path = "../sp-consensus-pow", default-features = true }
+sp-core = { workspace = true }
+sp-inherents = { workspace = true }
+sp-runtime = { workspace = true }
+thiserror = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "sp-api/std",
+    "sp-core/std",
+    "sp-runtime/std",
+]
+
+[lints.clippy.all]
+level = "allow"
+priority = 0
+
+[lints.clippy.bind_instead_of_map]
+level = "allow"
+priority = 2
+
+[lints.clippy.borrowed-box]
+level = "allow"
+priority = 2
+
+[lints.clippy.complexity]
+level = "warn"
+priority = 1
+
+[lints.clippy.correctness]
+level = "warn"
+priority = 1
+
+[lints.clippy.default_constructed_unit_structs]
+level = "allow"
+priority = 2
+
+[lints.clippy.derivable_impls]
+level = "allow"
+priority = 2
+
+[lints.clippy.eq_op]
+level = "allow"
+priority = 2
+
+[lints.clippy.erasing_op]
+level = "allow"
+priority = 2
+
+[lints.clippy.extra-unused-type-parameters]
+level = "allow"
+priority = 2
+
+[lints.clippy.identity-op]
+level = "allow"
+priority = 2
+
+[lints.clippy.if-same-then-else]
+level = "allow"
+priority = 2
+
+[lints.clippy.needless-lifetimes]
+level = "allow"
+priority = 2
+
+[lints.clippy.needless_option_as_deref]
+level = "allow"
+priority = 2
+
+[lints.clippy.nonminimal-bool]
+level = "allow"
+priority = 2
+
+[lints.clippy.option-map_unit_fn]
+level = "allow"
+priority = 2
+
+[lints.clippy.stable_sort_primitive]
+level = "allow"
+priority = 2
+
+[lints.clippy.too-many-arguments]
+level = "allow"
+priority = 2
+
+[lints.clippy.type_complexity]
+level = "allow"
+priority = 2
+
+[lints.clippy.unit_arg]
+level = "allow"
+priority = 2
+
+[lints.clippy.unnecessary_cast]
+level = "allow"
+priority = 2
+
+[lints.clippy.useless_conversion]
+level = "allow"
+priority = 2
+
+[lints.clippy.while_immutable_condition]
+level = "allow"
+priority = 2
+
+[lints.clippy.zero-prefixed-literal]
+level = "allow"
+priority = 2
+
+[lints.rust.suspicious_double_ref_op]
+level = "allow"
+priority = 2
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+priority = 0
+check-cfg = [
+    'cfg(build_opt_level, values("3"))',
+    'cfg(build_profile, values("debug", "release"))',
+    "cfg(enable_alloc_error_handler)",
+    "cfg(fuzzing)",
+    "cfg(substrate_runtime)",
+]
