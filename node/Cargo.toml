@@ -15,6 +15,8 @@ build = "build.rs"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
+sp-consensus-pow = { path = "../pallets/sp-consensus-pow", default-features = false }
+sc-consensus-pow = { path = "../pallets/sc-consensus-pow", default-features = false }
 clap = { features = ["derive"], workspace = true }
 futures = { features = ["thread-pool"], workspace = true }
 serde_json = { workspace = true, default-features = true }
