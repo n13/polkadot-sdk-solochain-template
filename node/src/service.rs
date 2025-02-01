@@ -71,40 +71,92 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
         client.clone(),
     );
 
-    // let (grandpa_block_import, grandpa_link) = sc_consensus_grandpa::block_import(
-    // 	client.clone(),
-    // 	GRANDPA_JUSTIFICATION_PERIOD,
-    // 	&client,
-    // 	select_chain.clone(),
-    // 	telemetry.as_ref().map(|x| x.handle()),
-    // )?;
-    // TODO replace this
+    // ── PoW Algorithm Instance ────────────────────────────────────────
+    // Create your concrete PoW algorithm instance. (Implement PowAlgorithm for your type.)
+    let pow_algorithm = PowAlgorithmImpl::new();
 
-    let cidp_client = client.clone();
+    // ── Inherent Data Providers for PoW ────────────────────────────────
+    // For example, create a closure that returns inherent data (here we simply use the timestamp twice).
+    // (Your runtime might require different inherent data.)
+    let create_inherent_data_providers = move |parent_hash, _| async move {
+        // Get the current system time as the inherent.
+        let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+        // Return a tuple (you might adjust this to what your runtime expects).
+        Ok((timestamp.clone(), timestamp))
+    };
 
-    // PoW import queue
-    let pow_verifier = PowVerifier::new(
+	    // ── Block Import for PoW ───────────────────────────────────────────
+    // You must supply an "inner" block import that performs the actual state transition.
+    // In many implementations this is created via the client or a default import.
+    // For example, assume you have:
+    let inner_block_import = /* obtain or create your inner block import here */;
+    // You also need to decide after which block number inherents should be checked.
+    let check_inherents_after = 0u32.into(); // replace with your threshold
+
+    // Create the PoW block import.
+    let pow_block_import = sc_consensus_pow::PowBlockImport::new(
+        inner_block_import,       // inner import (must implement BlockImport<Block>)
         client.clone(),
-        // Provide your PoW algorithm (e.g., SHA3 hasher)
-        PowAlgorithm,
-        // Difficulty calculator (custom or from runtime)
-        difficulty_calculator,
+        pow_algorithm.clone(),
+        check_inherents_after,
+        select_chain.clone(),
+        create_inherent_data_providers,
     );
+
+    // Box the block import to use in the import queue.
+    let boxed_pow_block_import: Box<dyn sc_consensus::BlockImport<Block, Error = _> + Send> =
+        Box::new(pow_block_import);
+
+    // For PoW we typically do not have a justification import.
+    let justification_import = None;
+
+    // ── PoW Import Queue ──────────────────────────────────────────────
     let import_queue = sc_consensus_pow::import_queue(
-        ImportQueueParams {
-            block_import: pow_block_import.clone(),
-            justification_import: None, // PoW doesn't use justifications
-            client: client.clone(),
-            create_inherent_data_providers: move |_, _| async move {
-                Ok(()) // Adjust inherent data as needed
-            },
-            spawner: &task_manager.spawn_essential_handle(),
-            registry: config.prometheus_registry(),
-            check_for_equivocation: Default::default(),
-            telemetry: telemetry.as_ref().map(|x| x.handle()),
-        },
-        pow_verifier,
+        boxed_pow_block_import,
+        justification_import,
+        pow_algorithm.clone(),
+        &task_manager.spawn_essential_handle(),
+        config.prometheus_registry(),
     )?;
+
+    // ── Return Partial Components ─────────────────────────────────────
+    Ok(sc_service::PartialComponents {
+        client,
+        backend,
+        task_manager,
+        import_queue,
+        keystore_container,
+        select_chain,
+        transaction_pool,
+        other: (telemetry,),
+    })
+    // unimplemented!("not done ");
+
+    // let cidp_client = client.clone();
+
+    // // PoW import queue
+    // let pow_verifier = PowVerifier::new(
+    //     client.clone(),
+    //     // Provide your PoW algorithm (e.g., SHA3 hasher)
+    //     PowAlgorithm,
+    //     // Difficulty calculator (custom or from runtime)
+    //     difficulty_calculator,
+    // );
+    // let import_queue = sc_consensus_pow::import_queue(
+    //     ImportQueueParams {
+    //         block_import: pow_block_import.clone(),
+    //         justification_import: None, // PoW doesn't use justifications
+    //         client: client.clone(),
+    //         create_inherent_data_providers: move |_, _| async move {
+    //             Ok(()) // Adjust inherent data as needed
+    //         },
+    //         spawner: &task_manager.spawn_essential_handle(),
+    //         registry: config.prometheus_registry(),
+    //         check_for_equivocation: Default::default(),
+    //         telemetry: telemetry.as_ref().map(|x| x.handle()),
+    //     },
+    //     pow_verifier,
+    // )?;
 
     // TODO make our own -
     // 	let import_queue =
@@ -137,7 +189,6 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
     // 			compatibility_mode: Default::default(),
     // 		})?;
 
-    unimplemented!("not done ");
     // Ok(sc_service::PartialComponents {
     // 	client,
     // 	backend,
