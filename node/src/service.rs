@@ -60,8 +60,9 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
         telemetry
     });
 
-    let select_chain = sc_consensus::LongestChain::new(backend.clone());
+    // ── Chain Selection and Transaction Pool ───────────────────────────
 
+    let select_chain = sc_consensus::LongestChain::new(backend.clone());
     let transaction_pool = sc_transaction_pool::BasicPool::new_full(
         config.transaction_pool.clone(),
         config.role.is_authority().into(),
