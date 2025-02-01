@@ -41,6 +41,8 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
         })
         .transpose()?;
 
+    // ── WASM Executor and Full Client Setup ─────────────────────────
+
     let executor = sc_service::new_wasm_executor::<sp_io::SubstrateHostFunctions>(&config.executor);
     let (client, backend, keystore_container, task_manager) =
         sc_service::new_full_parts::<Block, RuntimeApi, _>(
@@ -50,6 +52,7 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
         )?;
     let client = Arc::new(client);
 
+    // Spawn telemetry worker if telemetry is enabled.
     let telemetry = telemetry.map(|(worker, telemetry)| {
         task_manager
             .spawn_handle()
