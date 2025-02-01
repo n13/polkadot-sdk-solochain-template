@@ -3,14 +3,18 @@
 use futures::FutureExt;
 use resonance_runtime_1::{self, apis::RuntimeApi, opaque::Block};
 use sc_client_api::{Backend, BlockBackend};
+use sc_consensus::BlockImport;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpSyncConfig};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use std::sync::Arc;
+use sc_consensus_pow::import_queue;
 
 // PoW imports // TODO
 use sc_consensus_pow::{PowAlgorithm, PowBlockImport, PowVerifier};
 use sp_consensus_pow::DifficultyApi;
+use crate::pow; 
+use crate::inner_import::new_inner_block_import;
 
 pub(crate) type FullClient = sc_service::TFullClient<
     Block,
@@ -30,6 +34,7 @@ pub type Service = sc_service::PartialComponents<
 >;
 
 pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
+    // ── Telemetry Setup ──────────────────────────────────────────────
     let telemetry = config
         .telemetry_endpoints
         .clone()
@@ -42,17 +47,16 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
         .transpose()?;
 
     // ── WASM Executor and Full Client Setup ─────────────────────────
-
     let executor = sc_service::new_wasm_executor::<sp_io::SubstrateHostFunctions>(&config.executor);
-    let (client, backend, keystore_container, task_manager) =
+    let (client, backend, keystore_container, mut task_manager) =
         sc_service::new_full_parts::<Block, RuntimeApi, _>(
             config,
-            telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
+            telemetry.as_ref().map(|(_, t)| t.handle()),
             executor,
         )?;
     let client = Arc::new(client);
 
-    // Spawn telemetry worker if telemetry is enabled.
+    // Spawn telemetry worker if enabled.
     let telemetry = telemetry.map(|(worker, telemetry)| {
         task_manager
             .spawn_handle()
@@ -60,8 +64,7 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
         telemetry
     });
 
-    // ── Chain Selection and Transaction Pool ───────────────────────────
-
+    // ── Chain Selector and Transaction Pool ───────────────────────────
     let select_chain = sc_consensus::LongestChain::new(backend.clone());
     let transaction_pool = sc_transaction_pool::BasicPool::new_full(
         config.transaction_pool.clone(),
@@ -72,46 +75,47 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
     );
 
     // ── PoW Algorithm Instance ────────────────────────────────────────
-    // Create your concrete PoW algorithm instance. (Implement PowAlgorithm for your type.)
-    let pow_algorithm = PowAlgorithmImpl::new();
+    // Create your concrete PoW algorithm instance.
+    let pow_algorithm = pow::PowAlgorithmImpl;
 
-    // ── Inherent Data Providers for PoW ────────────────────────────────
-    // For example, create a closure that returns inherent data (here we simply use the timestamp twice).
-    // (Your runtime might require different inherent data.)
-    let create_inherent_data_providers = move |parent_hash, _| async move {
-        // Get the current system time as the inherent.
-        let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
-        // Return a tuple (you might adjust this to what your runtime expects).
-        Ok((timestamp.clone(), timestamp))
-    };
+    // ── Inherent Data Providers ───────────────────────────────────────
+    // Define a closure that creates the inherent data providers.
+    // (Adjust this to match what your runtime expects; typically, a timestamp and any other inherent.)
+	let create_inherent_data_providers = move |_parent_hash, _| async move {
+		let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+		Ok((timestamp,))
+	};
+    // ── Inner Block Import ─────────────────────────────────────────────
+    // Here you must supply an inner block import that performs the actual state transition.
+    // In many nodes this was used for Aura; now you must provide one that works without Aura/GRANDPA.
+    // For example, if you have a helper function `new_inner_block_import` that returns an object
+    // implementing `BlockImport<Block>`, use it here:
+    let inner_block_import = new_inner_block_import(config, client.clone())?;
+    // (Alternatively, reuse an import from your previous consensus implementation if appropriate.)
 
-	    // ── Block Import for PoW ───────────────────────────────────────────
-    // You must supply an "inner" block import that performs the actual state transition.
-    // In many implementations this is created via the client or a default import.
-    // For example, assume you have:
-    let inner_block_import = /* obtain or create your inner block import here */;
-    // You also need to decide after which block number inherents should be checked.
-    let check_inherents_after = 0u32.into(); // replace with your threshold
+    // Define after which block number inherents are checked. Adjust as needed.
+    let check_inherents_after = 0u32.into();
 
-    // Create the PoW block import.
-    let pow_block_import = sc_consensus_pow::PowBlockImport::new(
-        inner_block_import,       // inner import (must implement BlockImport<Block>)
+    // ── PoW Block Import ───────────────────────────────────────────────
+    // Wrap the inner block import in a PowBlockImport.
+    let pow_block_import = PowBlockImport::new(
+        inner_block_import, // inner block import (implements BlockImport<Block>)
         client.clone(),
         pow_algorithm.clone(),
-        check_inherents_after,
+        check_inherents_after, // threshold for checking inherents
         select_chain.clone(),
-        create_inherent_data_providers,
+        create_inherent_data_providers, // inherent data providers closure
     );
 
-    // Box the block import to use in the import queue.
-    let boxed_pow_block_import: Box<dyn sc_consensus::BlockImport<Block, Error = _> + Send> =
-        Box::new(pow_block_import);
-
-    // For PoW we typically do not have a justification import.
+    // Box the PowBlockImport so that it can be passed to the import queue.
+	let boxed_pow_block_import: Box<
+    	dyn BlockImport<Block, Error = sp_consensus::Error> + Send + Sync
+	> = Box::new(pow_block_import);
+    // For PoW we usually do not have a justification import.
     let justification_import = None;
 
-    // ── PoW Import Queue ──────────────────────────────────────────────
-    let import_queue = sc_consensus_pow::import_queue(
+    // ── PoW Import Queue ───────────────────────────────────────────────
+    let import_queue = import_queue(
         boxed_pow_block_import,
         justification_import,
         pow_algorithm.clone(),

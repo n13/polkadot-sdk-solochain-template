@@ -7,6 +7,8 @@ mod cli;
 mod command;
 mod rpc;
 mod service;
+mod pow;
+mod inner_import;
 
 fn main() -> sc_cli::Result<()> {
 	command::run()
