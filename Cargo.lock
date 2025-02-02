@@ -8073,6 +8073,7 @@ dependencies = [
  "jsonrpsee",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
+ "parity-scale-codec",
  "resonance-runtime-1",
  "sc-basic-authorship",
  "sc-cli",

@@ -85,6 +85,7 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
 		let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 		Ok((timestamp,))
 	};
+	
     // ── Inner Block Import ─────────────────────────────────────────────
     // Here you must supply an inner block import that performs the actual state transition.
     // In many nodes this was used for Aura; now you must provide one that works without Aura/GRANDPA.

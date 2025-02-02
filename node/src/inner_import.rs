@@ -8,7 +8,7 @@ use sp_consensus::Error as ConsensusError;
 use resonance_runtime_1::opaque::Block; 
 // Also import your FullClient and FullBackend from your service module.
 // (Adjust the path as needed.)
-use crate::service::{FullClient};
+use crate::service::FullClient;
 
 /// A simple adapter that wraps the client as a block importer.
 pub struct ClientBlockImport(pub Arc<FullClient>);
