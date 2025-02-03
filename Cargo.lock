@@ -8071,6 +8071,7 @@ dependencies = [
  "frame-system",
  "futures",
  "jsonrpsee",
+ "log",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",

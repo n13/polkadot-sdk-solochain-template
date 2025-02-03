@@ -79,7 +79,7 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
             .spawn("telemetry", None, worker.run());
         telemetry
     });
-
+    println!("🛠️  Creating transaction pool...");
     // ── Chain Selector and Transaction Pool ───────────────────────────
     let select_chain = sc_consensus::LongestChain::new(backend.clone());
     let transaction_pool = sc_transaction_pool::BasicPool::new_full(
@@ -89,6 +89,8 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
         task_manager.spawn_essential_handle(),
         client.clone(),
     );
+
+    println!("🔨 Initializing PoW algorithm instance");
 
     // ── PoW Algorithm Instance ────────────────────────────────────────
     // Create your concrete PoW algorithm instance.
@@ -113,6 +115,7 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
     // Define after which block number inherents are checked. Adjust as needed.
     let check_inherents_after = 0u32.into();
 
+    println!("📦 Configuring PoW block import");
     // ── PoW Block Import ───────────────────────────────────────────────
     // Wrap the inner block import in a PowBlockImport.
     let pow_block_import = PowBlockImport::new(
@@ -124,6 +127,7 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
         create_inherent_data_providers,
     );
 
+    println!("🚚 Building PoW import queue");
     // ── PoW Import Queue ───────────────────────────────────────────────
     let import_queue = import_queue(
 		Box::new(pow_block_import.clone()),
@@ -227,6 +231,8 @@ pub fn new_full<
     let prometheus_registry = config.prometheus_registry().cloned();
 
     // Start the mining worker
+    println!("⏳ Checking node role for mining: is_authority={}", role.is_authority());
+
     if role.is_authority() {
         println!("starting mining worker");
         let proposer_factory = sc_basic_authorship::ProposerFactory::new(
@@ -262,6 +268,8 @@ pub fn new_full<
             None,
             mining_task
         );
+        println!("⛏️  Starting PoW miner worker - DONE");
+
     }
 
     network_starter.start_network();

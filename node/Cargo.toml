@@ -24,6 +24,7 @@ clap = { features = ["derive"], workspace = true }
 futures = { features = ["thread-pool"], workspace = true }
 serde_json = { workspace = true, default-features = true }
 jsonrpsee = { features = ["server"], workspace = true }
+log = { workspace = true }
 
 sc-cli.workspace = true
 sc-cli.default-features = true

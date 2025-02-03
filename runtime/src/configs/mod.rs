@@ -91,26 +91,6 @@ impl frame_system::Config for Runtime {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-// impl pallet_aura::Config for Runtime {
-// 	type AuthorityId = AuraId;
-// 	type DisabledValidators = ();
-// 	type MaxAuthorities = ConstU32<32>;
-// 	type AllowMultipleBlocksPerSlot = ConstBool<false>;
-// 	type SlotDuration = pallet_aura::MinimumPeriodTimesTwo<Runtime>;
-// }
-
-// impl pallet_grandpa::Config for Runtime {
-// 	type RuntimeEvent = RuntimeEvent;
-
-// 	type WeightInfo = ();
-// 	type MaxAuthorities = ConstU32<32>;
-// 	type MaxNominators = ConstU32<0>;
-// 	type MaxSetIdSessionEntries = ConstU64<0>;
-
-// 	type KeyOwnerProof = sp_core::Void;
-// 	type EquivocationReportSystem = ();
-// }
-
 impl pallet_timestamp::Config for Runtime {
 	type Moment = u64;
 	type OnTimestampSet = ();
