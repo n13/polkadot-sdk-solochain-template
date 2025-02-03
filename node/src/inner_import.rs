@@ -11,6 +11,7 @@ use resonance_runtime_1::opaque::Block;
 use crate::service::FullClient;
 
 /// A simple adapter that wraps the client as a block importer.
+#[derive(Clone)] 
 pub struct ClientBlockImport(pub Arc<FullClient>);
 
 #[jsonrpsee::core::async_trait]
