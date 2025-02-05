@@ -517,148 +517,129 @@ where
 	let worker = MiningHandle::new(algorithm.clone(), block_import, justification_sync_link);
 	let worker_ret = worker.clone();
 
-	use futures::FutureExt; // for catch_unwind()
-	use std::panic::AssertUnwindSafe;
-	
 	let task = async move {
-		// Wrap the whole loop in AssertUnwindSafe and then call catch_unwind.
-		let result = AssertUnwindSafe(async {
-			debug!(target: LOG_TARGET, "⛏️ Mining worker started");
-			loop {
-				debug!(target: LOG_TARGET, "Attempting to mine block");
-				if timer.next().await.is_none() {
-					break;
-				}
-	
-				if sync_oracle.is_major_syncing() {
-					debug!(target: LOG_TARGET, "Skipping proposal due to sync.");
-					worker.on_major_syncing();
-					continue;
-				}
-	
-				let best_header = match select_chain.best_chain().await {
-					Ok(x) => x,
-					Err(err) => {
-						warn!(
-							target: LOG_TARGET,
-							"Unable to pull new block for authoring. Select best chain error: {}",
-							err
-						);
-						continue;
-					},
-				};
-				let best_hash = best_header.hash();
-	
-				if worker.best_hash() == Some(best_hash) {
-					continue;
-				}
-	
-				let difficulty = match algorithm.difficulty(best_hash) {
-					Ok(x) => x,
-					Err(err) => {
-						warn!(
-							target: LOG_TARGET,
-							"Unable to propose new block for authoring. Fetch difficulty failed: {}",
-							err,
-						);
-						continue;
-					},
-				};
-	
-				let inherent_data_providers = match create_inherent_data_providers
-					.create_inherent_data_providers(best_hash, ())
-					.await
-				{
-					Ok(x) => x,
-					Err(err) => {
-						warn!(
-							target: LOG_TARGET,
-							"Unable to propose new block for authoring. Creating inherent data providers failed: {}",
-							err,
-						);
-						continue;
-					},
-				};
-	
-				let inherent_data = match inherent_data_providers.create_inherent_data().await {
-					Ok(r) => r,
-					Err(e) => {
-						warn!(
-							target: LOG_TARGET,
-							"Unable to propose new block for authoring. Creating inherent data failed: {}",
-							e,
-						);
-						continue;
-					},
-				};
-	
-				let mut inherent_digest = Digest::default();
-				if let Some(pre_runtime) = &pre_runtime {
-					inherent_digest.push(DigestItem::PreRuntime(POW_ENGINE_ID, pre_runtime.to_vec()));
-				}
-	
-				let pre_runtime = pre_runtime.clone();
-	
-				let proposer = match env.init(&best_header).await {
-					Ok(x) => x,
-					Err(err) => {
-						warn!(
-							target: LOG_TARGET,
-							"Unable to propose new block for authoring. Creating proposer failed: {:?}",
-							err,
-						);
-						continue;
-					},
-				};
-	
-				debug!(target: LOG_TARGET, "proposer created");
-	
-				let proposal = match proposer.propose(inherent_data, inherent_digest, build_time, None).await {
-					Ok(x) => x,
-					Err(err) => {
-						warn!(
-							target: LOG_TARGET,
-							"Unable to propose new block for authoring. Creating proposal failed: {}",
-							err,
-						);
-						continue;
-					},
-				};
-	
-				debug!(target: LOG_TARGET, "proposal created");
-	
-				let build = MiningBuild::<Block, _, _> {
-					metadata: MiningMetadata {
-						best_hash,
-						pre_hash: proposal.block.header().hash(),
-						pre_runtime: pre_runtime.clone(),
-						difficulty,
-					},
-					proposal,
-				};
-				debug!(target: LOG_TARGET, "New mining build created at {}", build.metadata.pre_hash);
-	
-				worker.on_build(build);
-				debug!(target: LOG_TARGET, "New mining build notified.");
+		loop {
+			if timer.next().await.is_none() {
+				break
 			}
-		})
-		.catch_unwind()
-		.await;
-	
-		match result {
-			Ok(_) => debug!(target: LOG_TARGET, "Mining loop finished without panics"),
-			Err(e) => {
-				// Handle and log the panic payload.
-				if let Some(s) = e.downcast_ref::<&str>() {
-					error!(target: LOG_TARGET, "Mining worker panicked: {}", s);
-				} else if let Some(s) = e.downcast_ref::<String>() {
-					error!(target: LOG_TARGET, "Mining worker panicked: {}", s);
-				} else {
-					error!(target: LOG_TARGET, "Mining worker panicked with an unknown error");
-				}
+
+			if sync_oracle.is_major_syncing() {
+				debug!(target: LOG_TARGET, "Skipping proposal due to sync.");
+				worker.on_major_syncing();
+				continue
 			}
+
+			let best_header = match select_chain.best_chain().await {
+				Ok(x) => x,
+				Err(err) => {
+					warn!(
+						target: LOG_TARGET,
+						"Unable to pull new block for authoring. \
+						 Select best chain error: {}",
+						err
+					);
+					continue
+				},
+			};
+			let best_hash = best_header.hash();
+
+			if worker.best_hash() == Some(best_hash) {
+				continue
+			}
+
+			// The worker is locked for the duration of the whole proposing period. Within this
+			// period, the mining target is outdated and useless anyway.
+
+			let difficulty = match algorithm.difficulty(best_hash) {
+				Ok(x) => x,
+				Err(err) => {
+					warn!(
+						target: LOG_TARGET,
+						"Unable to propose new block for authoring. \
+						 Fetch difficulty failed: {}",
+						err,
+					);
+					continue
+				},
+			};
+
+			let inherent_data_providers = match create_inherent_data_providers
+				.create_inherent_data_providers(best_hash, ())
+				.await
+			{
+				Ok(x) => x,
+				Err(err) => {
+					warn!(
+						target: LOG_TARGET,
+						"Unable to propose new block for authoring. \
+						 Creating inherent data providers failed: {}",
+						err,
+					);
+					continue
+				},
+			};
+
+			let inherent_data = match inherent_data_providers.create_inherent_data().await {
+				Ok(r) => r,
+				Err(e) => {
+					warn!(
+						target: LOG_TARGET,
+						"Unable to propose new block for authoring. \
+						 Creating inherent data failed: {}",
+						e,
+					);
+					continue
+				},
+			};
+
+			let mut inherent_digest = Digest::default();
+			if let Some(pre_runtime) = &pre_runtime {
+				inherent_digest.push(DigestItem::PreRuntime(POW_ENGINE_ID, pre_runtime.to_vec()));
+			}
+
+			let pre_runtime = pre_runtime.clone();
+
+			let proposer = match env.init(&best_header).await {
+				Ok(x) => x,
+				Err(err) => {
+					warn!(
+						target: LOG_TARGET,
+						"Unable to propose new block for authoring. \
+						 Creating proposer failed: {:?}",
+						err,
+					);
+					continue
+				},
+			};
+
+			let proposal =
+				match proposer.propose(inherent_data, inherent_digest, build_time, None).await {
+					Ok(x) => x,
+					Err(err) => {
+						warn!(
+							target: LOG_TARGET,
+							"Unable to propose new block for authoring. \
+							 Creating proposal failed: {}",
+							err,
+						);
+						continue
+					},
+				};
+
+			let build = MiningBuild::<Block, Algorithm, _> {
+				metadata: MiningMetadata {
+					best_hash,
+					pre_hash: proposal.block.header().hash(),
+					pre_runtime: pre_runtime.clone(),
+					difficulty,
+				},
+				proposal,
+			};
+
+			worker.on_build(build);
 		}
 	};
+
 	(worker_ret, task)
 }
 
