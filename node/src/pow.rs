@@ -15,7 +15,8 @@ impl<B: BlockT> PowAlgorithm<B> for PowAlgorithmImpl {
     type Difficulty = u128;
 
     fn difficulty(&self, _parent: B::Hash) -> Result<Self::Difficulty, Error<B>> {
-        Ok(1)
+        // Set the difficulty to u128::MAX - 1 to make mining easier.
+        Ok(u128::MAX - 1)
     }
 
     /// Verifies the seal by checking:
@@ -34,7 +35,7 @@ impl<B: BlockT> PowAlgorithm<B> for PowAlgorithmImpl {
         let mut seal_data = &seal[..];
         let (nonce, result_hash) = match <(u64, [u8; 32])>::decode(&mut seal_data) {
             Ok(res) => res,
-            Err(_) => return Ok(false), // Invalid seal encoding
+            Err(_) => return Err(Error::InvalidSeal),
         };
 
         // Compute the hash using the pre_hash and nonce

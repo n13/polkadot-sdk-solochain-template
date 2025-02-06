@@ -270,20 +270,25 @@ pub fn new_full<
         // assert_send(mining_handle);
 
         task_manager.spawn_essential_handle().spawn(
-            "pow-mining",
+            "pow-mining-actualy-real-mining-happening",
             None,
             async move {
                 let mut nonce = 0;
                 loop {
                     // Get mining metadata
+                    println!("getting metadata");
+
                     let metadata = match mining_handle.metadata() {
                         Some(m) => m,
                         None => {
                             log::warn!(target: "pow", "No mining metadata available");
-                            tokio::time::sleep(Duration::from_millis(100)).await;
+                            tokio::time::sleep(Duration::from_millis(1000)).await;
                             continue;
                         }
                     };
+                    let version = mining_handle.version();
+
+                    println!("mine block");
 
                     // Mine the block
                     let seal = match mine_block::<Block>(
@@ -291,24 +296,36 @@ pub fn new_full<
                         nonce,
                         metadata.difficulty,
                     ) {
-                        Ok(s) => s,
+                        Ok(s) => {
+                            println!("valid seal: {:?}", s);
+                            s
+                        },
                         Err(_) => {
+                            println!("error - seal not valid");
                             nonce += 1;
+                            tokio::time::sleep(Duration::from_millis(100)).await;
                             continue;
                         }
                     };
-                    let current_metadata = mining_handle.metadata();
-                    if current_metadata == Some(metadata) {
+
+                    println!("block found");
+
+                    let current_version = mining_handle.version();
+                    if current_version == version {
                         if futures::executor::block_on(mining_handle.submit(seal)) {
-                            log::debug!(target: "pow", "Successfully mined and submitted a new block");
+                            println!("Successfully mined and submitted a new block");
                             nonce = 0;
                         } else {
-                            log::warn!(target: "pow", "Failed to submit mined block");
+                            println!("Failed to submit mined block");
                             nonce += 1;
                         }
                     }
 
                     // Submit the mined block
+                    // let handle = tokio::task::spawn(mining_handle.submit(seal));
+                    
+                    // let f = mining_handle.submit(seal).await;
+                    
                     // if mining_handle.submit(seal).await {
                     //     log::debug!(target: "pow", "Successfully mined and submitted a new block");
                     //     nonce = 0; // Reset nonce after successful submission
@@ -340,19 +357,34 @@ fn mine_block<B: BlockT>(
     nonce: u64,
     difficulty: <PowAlgorithmImpl as PowAlgorithm<B>>::Difficulty,
 ) -> Result<Seal, ()> {
-    let pow_algorithm = PowAlgorithmImpl;
-
-    // Create a dummy BlockId for verification
-    let block_id = BlockId::<B>::hash(pre_hash);
-
     // Compute hash (PoW proof)
     let input = (pre_hash, nonce).encode();
     let computed_hash = blake2_256(&input);
 
+    // Convert the first 16 bytes of the hash into a u128 (little-endian)
+    let hash_num = u128::from_le_bytes(
+        computed_hash[0..16]
+            .try_into()
+            .expect("First 16 bytes of hash are always valid"),
+    );
+
+    // Check if the hash value meets the difficulty target
+    if hash_num > difficulty {
+        println!("Hash does not meet difficulty target: {} > {}", hash_num, difficulty);
+        return Err(());
+    }
+
     // Create the seal (nonce + hash)
     let seal = (nonce, computed_hash).encode();
 
-    // Verify the seal using the PoW algorithm
+    println!("Mining with nonce: {}", nonce);
+    println!("Input: {:?}", input);
+    println!("Computed hash: {:?}", computed_hash);
+    println!("Difficulty: {:?}", difficulty);
+
+    // Verify the seal using the PoW algorithm (optional, for double-checking)
+    let pow_algorithm = PowAlgorithmImpl;
+    let block_id = BlockId::<B>::hash(pre_hash);
     let is_valid = pow_algorithm.verify(
         &block_id,
         &pre_hash,
@@ -360,6 +392,8 @@ fn mine_block<B: BlockT>(
         &seal,
         difficulty,
     ).map_err(|_| ())?;
+
+    println!("Seal is valid: {} {:?}", is_valid, seal);
 
     if is_valid {
         Ok(seal)
