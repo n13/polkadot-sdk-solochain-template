@@ -335,15 +335,19 @@ pub fn new_full<
                     // }
 
                     // Sleep to avoid spamming
-                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    tokio::time::sleep(Duration::from_millis(1000)).await;
                 }
             }
-            .boxed()
+            // .boxed()
         );
+
+        println!("⛏️  Pow miner spawned");
 
     }
 
+    println!("🌐 Initializing network...");
     network_starter.start_network();
+    println!("🌐 Network started successfully");
     Ok(task_manager)
 }
 
@@ -377,10 +381,10 @@ fn mine_block<B: BlockT>(
     // Create the seal (nonce + hash)
     let seal = (nonce, computed_hash).encode();
 
-    println!("Mining with nonce: {}", nonce);
-    println!("Input: {:?}", input);
-    println!("Computed hash: {:?}", computed_hash);
-    println!("Difficulty: {:?}", difficulty);
+    // println!("Mining with nonce: {}", nonce);
+    // println!("Input: {:?}", input);
+    // println!("Computed hash: {:?}", computed_hash);
+    // println!("Difficulty: {:?}", difficulty);
 
     // Verify the seal using the PoW algorithm (optional, for double-checking)
     let pow_algorithm = PowAlgorithmImpl;
@@ -393,7 +397,7 @@ fn mine_block<B: BlockT>(
         difficulty,
     ).map_err(|_| ())?;
 
-    println!("Seal is valid: {} {:?}", is_valid, seal);
+    // println!("Seal is valid: {} {:?}", is_valid, seal);
 
     if is_valid {
         Ok(seal)
