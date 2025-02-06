@@ -5,23 +5,23 @@ use jsonrpsee::tokio;
 use resonance_runtime_1::{self, apis::RuntimeApi, opaque::Block};
 use sc_client_api::{Backend, BlockBackend};
 use sc_consensus::BlockImport;
+use sc_consensus_pow::import_queue;
+use sc_consensus_pow::{MiningHandle, MiningMetadata, PowAlgorithm};
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpSyncConfig};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_consensus::Error as ConsensusError;
 use sp_inherents::CreateInherentDataProviders;
 use sp_timestamp::InherentDataProvider;
-use std::sync::Arc;
-use sc_consensus_pow::import_queue;
-use std::time::Duration;
-use sc_consensus_pow::{MiningHandle, MiningMetadata, PowAlgorithm};
 use std::future::Future;
+use std::sync::Arc;
+use std::time::Duration;
 
 // PoW imports // TODO
+use crate::inner_import::{new_inner_block_import, ClientBlockImport};
+use crate::pow::PowAlgorithmImpl;
 use sc_consensus_pow::{PowBlockImport, PowVerifier};
 use sp_consensus_pow::DifficultyApi;
-use crate::pow::PowAlgorithmImpl;
-use crate::inner_import::{new_inner_block_import, ClientBlockImport};
 use sp_runtime::traits::Block as BlockT;
 
 pub(crate) type FullClient = sc_service::TFullClient<
@@ -33,12 +33,16 @@ type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
 // helper trait
-pub trait DynPowBlockImport<Block: BlockT>: BlockImport<Block, Error = ConsensusError> + Send + Sync {}
+pub trait DynPowBlockImport<Block: BlockT>:
+    BlockImport<Block, Error = ConsensusError> + Send + Sync
+{
+}
 impl<T, Block> DynPowBlockImport<Block> for T
 where
     T: BlockImport<Block, Error = ConsensusError> + Send + Sync,
     Block: BlockT,
-{}
+{
+}
 // pub type BoxPowBlockImport<Block> = Box<dyn DynPowBlockImport<Block>>;
 
 pub type Service = sc_service::PartialComponents<
@@ -47,7 +51,10 @@ pub type Service = sc_service::PartialComponents<
     FullSelectChain,
     sc_consensus_pow::PowImportQueue<Block>,
     sc_transaction_pool::FullPool<Block, FullClient>,
-    (Box<dyn BlockImport<Block, Error = ConsensusError> + Send + Sync>, Option<Telemetry>),
+    (
+        Box<dyn BlockImport<Block, Error = ConsensusError> + Send + Sync>,
+        Option<Telemetry>,
+    ),
 >;
 
 pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
@@ -65,13 +72,16 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
 
     // ── WASM Executor and Full Client Setup ─────────────────────────
     let executor = sc_service::new_wasm_executor::<sp_io::SubstrateHostFunctions>(&config.executor);
-    
-    let (client, backend, keystore_container, mut task_manager) =
-    sc_service::new_full_parts::<
+
+    let (client, backend, keystore_container, task_manager) = sc_service::new_full_parts::<
         Block,
         RuntimeApi,
         sc_executor::WasmExecutor<sp_io::SubstrateHostFunctions>,
-    >(config, telemetry.as_ref().map(|(_, t)| t.handle()), executor)?;
+    >(
+        config,
+        telemetry.as_ref().map(|(_, t)| t.handle()),
+        executor,
+    )?;
     let client = Arc::new(client);
 
     // Spawn telemetry worker if enabled.
@@ -101,12 +111,13 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
     // ── Inherent Data Providers ───────────────────────────────────────
     // Define a closure that creates the inherent data providers.
     // (Adjust this to match what your runtime expects; typically, a timestamp and any other inherent.)
-    let create_inherent_data_providers = move |_parent_hash: <Block as BlockT>::Hash, _extra: ()| async move {
-        // Create a timestamp provider from the system time.
-        let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
-        // Return it as a single-element tuple.
-        Ok((timestamp,))
-    };
+    let create_inherent_data_providers =
+        move |_parent_hash: <Block as BlockT>::Hash, _extra: ()| async move {
+            // Create a timestamp provider from the system time.
+            let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+            // Return it as a single-element tuple.
+            Ok((timestamp,))
+        };
 
     // ── Inner Block Import ─────────────────────────────────────────────
     // Here you must supply an inner block import that performs the actual state transition.
@@ -134,7 +145,7 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
     println!("🚚 Building PoW import queue");
     // ── PoW Import Queue ───────────────────────────────────────────────
     let import_queue = import_queue(
-		Box::new(pow_block_import.clone()),
+        Box::new(pow_block_import.clone()),
         None,
         pow_algorithm.clone(),
         &task_manager.spawn_essential_handle(),
@@ -155,22 +166,22 @@ pub fn new_partial(config: &Configuration) -> Result<Service, ServiceError> {
 }
 
 /// Builds a new service for a full client.
-/// 
+///
 pub fn new_full<
     N: sc_network::NetworkBackend<Block, <Block as sp_runtime::traits::Block>::Hash>,
 >(
     config: Configuration,
 ) -> Result<TaskManager, ServiceError> {
     let sc_service::PartialComponents::<FullClient, _, _, _, _, _> {
-		client,
-		backend,
-		mut task_manager,
-		import_queue,
-		keystore_container,
-		select_chain,
-		transaction_pool,
-		other: (pow_block_import, telemetry),
-	} = new_partial(&config)?;
+        client,
+        backend,
+        mut task_manager,
+        import_queue,
+        keystore_container,
+        select_chain,
+        transaction_pool,
+        other: (pow_block_import, telemetry),
+    } = new_partial(&config)?;
 
     let mut net_config = sc_network::config::FullNetworkConfiguration::<
         Block,
@@ -180,20 +191,21 @@ pub fn new_full<
     let metrics = N::register_notification_metrics(config.prometheus_registry());
 
     let peer_store_handle = net_config.peer_store_handle();
-    
-    let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) = 
-    sc_service::build_network(sc_service::BuildNetworkParams {
-        config: &config,
-        net_config,
-        client: client.clone(),
-        transaction_pool: transaction_pool.clone() as Arc<sc_transaction_pool::FullPool<Block, FullClient>>,
-        spawn_handle: task_manager.spawn_handle(),
-        import_queue,
-        block_announce_validator_builder: None,
-        warp_sync_config: None, // PoW doesn't use warp sync
-        block_relay: None,
-        metrics,
-    })?;
+
+    let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
+        sc_service::build_network(sc_service::BuildNetworkParams {
+            config: &config,
+            net_config,
+            client: client.clone(),
+            transaction_pool: transaction_pool.clone()
+                as Arc<sc_transaction_pool::FullPool<Block, FullClient>>,
+            spawn_handle: task_manager.spawn_handle(),
+            import_queue,
+            block_announce_validator_builder: None,
+            warp_sync_config: None, // PoW doesn't use warp sync
+            block_relay: None,
+            metrics,
+        })?;
 
     if config.offchain_worker.enabled {
         // we don't need this
@@ -223,8 +235,39 @@ pub fn new_full<
     let name = config.network.node_name.clone();
     let prometheus_registry = config.prometheus_registry().cloned();
 
+    let rpc_extensions_builder = {
+        let client = client.clone();
+        let pool = transaction_pool.clone();
+
+        Box::new(move |_| {
+            let deps = crate::rpc::FullDeps {
+                client: client.clone(),
+                pool: pool.clone(),
+            };
+            crate::rpc::create_full(deps).map_err(Into::into)
+        })
+    };
+
+    let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+        network: Arc::new(network.clone()),
+        client: client.clone(),
+        keystore: keystore_container.keystore(),
+        task_manager: &mut task_manager,
+        transaction_pool: transaction_pool.clone(),
+        rpc_builder: rpc_extensions_builder,
+        backend,
+        system_rpc_tx,
+        tx_handler_controller,
+        sync_service: sync_service.clone(),
+        config,
+        telemetry: telemetry.as_mut(),
+    })?;
+
     // Start the mining worker
-    println!("⏳ Checking node role for mining: is_authority={}", role.is_authority());
+    println!(
+        "⏳ Checking node role for mining: is_authority={}",
+        role.is_authority()
+    );
 
     if role.is_authority() {
         println!("starting mining worker");
@@ -237,14 +280,15 @@ pub fn new_full<
         );
 
         let pow_algorithm = PowAlgorithmImpl;
-        
+
         // Assume `Block` is your concrete blockchain type.
-        let create_inherent_data_providers = move |_parent_hash: <Block as BlockT>::Hash, _extra: ()| async move {
-            // Create a timestamp provider from the system time.
-            let timestamp = InherentDataProvider::from_system_time();
-            // Return it as a single-element tuple.
-            Ok((timestamp,))
-        };
+        let create_inherent_data_providers =
+            move |_parent_hash: <Block as BlockT>::Hash, _extra: ()| async move {
+                // Create a timestamp provider from the system time.
+                let timestamp = InherentDataProvider::from_system_time();
+                // Return it as a single-element tuple.
+                Ok((timestamp,))
+            };
         let (mining_handle, mining_task) = sc_consensus_pow::start_mining_worker(
             /*block_import:*/ Box::new(pow_block_import),
             /*client:*/ client.clone(),
@@ -258,14 +302,12 @@ pub fn new_full<
             /*timeout:*/ Duration::from_secs(20),
             /*build_time:*/ Duration::from_secs(10),
         );
-    
+
         println!("⛏️  Starting PoW miner worker");
 
-        task_manager.spawn_essential_handle().spawn(
-            "pow-mining",
-            None,
-            mining_task
-        );
+        task_manager
+            .spawn_essential_handle()
+            .spawn("pow-mining", None, mining_task);
         println!("⛏️  Start mining...");
         // assert_send(mining_handle);
 
@@ -291,22 +333,19 @@ pub fn new_full<
                     println!("mine block");
 
                     // Mine the block
-                    let seal = match mine_block::<Block>(
-                        metadata.pre_hash,
-                        nonce,
-                        metadata.difficulty,
-                    ) {
-                        Ok(s) => {
-                            println!("valid seal: {:?}", s);
-                            s
-                        },
-                        Err(_) => {
-                            println!("error - seal not valid");
-                            nonce += 1;
-                            tokio::time::sleep(Duration::from_millis(100)).await;
-                            continue;
-                        }
-                    };
+                    let seal =
+                        match mine_block::<Block>(metadata.pre_hash, nonce, metadata.difficulty) {
+                            Ok(s) => {
+                                println!("valid seal: {:?}", s);
+                                s
+                            }
+                            Err(_) => {
+                                println!("error - seal not valid");
+                                nonce += 1;
+                                tokio::time::sleep(Duration::from_millis(100)).await;
+                                continue;
+                            }
+                        };
 
                     println!("block found");
 
@@ -323,9 +362,9 @@ pub fn new_full<
 
                     // Submit the mined block
                     // let handle = tokio::task::spawn(mining_handle.submit(seal));
-                    
+
                     // let f = mining_handle.submit(seal).await;
-                    
+
                     // if mining_handle.submit(seal).await {
                     //     log::debug!(target: "pow", "Successfully mined and submitted a new block");
                     //     nonce = 0; // Reset nonce after successful submission
@@ -337,12 +376,10 @@ pub fn new_full<
                     // Sleep to avoid spamming
                     tokio::time::sleep(Duration::from_millis(1000)).await;
                 }
-            }
-            // .boxed()
+            }, // .boxed()
         );
 
         println!("⛏️  Pow miner spawned");
-
     }
 
     println!("🌐 Initializing network...");
@@ -351,9 +388,9 @@ pub fn new_full<
     Ok(task_manager)
 }
 
-use sp_core::blake2_256;
-use sp_consensus_pow::Seal;
 use codec::Encode;
+use sp_consensus_pow::Seal;
+use sp_core::blake2_256;
 use sp_runtime::generic::BlockId;
 
 fn mine_block<B: BlockT>(
@@ -374,7 +411,10 @@ fn mine_block<B: BlockT>(
 
     // Check if the hash value meets the difficulty target
     if hash_num > difficulty {
-        println!("Hash does not meet difficulty target: {} > {}", hash_num, difficulty);
+        println!(
+            "Hash does not meet difficulty target: {} > {}",
+            hash_num, difficulty
+        );
         return Err(());
     }
 
@@ -389,13 +429,9 @@ fn mine_block<B: BlockT>(
     // Verify the seal using the PoW algorithm (optional, for double-checking)
     let pow_algorithm = PowAlgorithmImpl;
     let block_id = BlockId::<B>::hash(pre_hash);
-    let is_valid = pow_algorithm.verify(
-        &block_id,
-        &pre_hash,
-        None,
-        &seal,
-        difficulty,
-    ).map_err(|_| ())?;
+    let is_valid = pow_algorithm
+        .verify(&block_id, &pre_hash, None, &seal, difficulty)
+        .map_err(|_| ())?;
 
     // println!("Seal is valid: {} {:?}", is_valid, seal);
 
@@ -407,7 +443,7 @@ fn mine_block<B: BlockT>(
 }
 
 // helper method
-fn assert_send<T: Send>(_: T)  {
+fn assert_send<T: Send>(_: T) {
     println!("It's send");
 }
 // pub struct CreateInherentDataProviders;
