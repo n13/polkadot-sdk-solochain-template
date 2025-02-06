@@ -2,7 +2,7 @@
 
 # first build the project then run this
 
-cargo build
+cargo build --release
 
 ./target/release/solochain-template-node \
   build-spec \

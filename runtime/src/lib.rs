@@ -50,8 +50,9 @@ pub mod opaque {
 
 impl_opaque_keys! {
 	pub struct SessionKeys {
-		pub aura: Aura,
-		pub grandpa: Grandpa,
+		//pub qpow: QPoW,
+		//QPoW doesn't have session keys ? - TODO - check it
+		//We could have something like this: pub qpow: sp_consensus_qpow::AuthorityId,
 	}
 }
 
@@ -59,40 +60,21 @@ impl_opaque_keys! {
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("solochain-template-runtime"),
-	impl_name: create_runtime_str!("solochain-template-runtime"),
-	authoring_version: 1,
-	// The version of the runtime specification. A full node will not attempt to use its native
-	//   runtime in substitute for the on-chain Wasm runtime unless all of `spec_name`,
-	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
-	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
-	//   the compatible custom types.
-	spec_version: 100,
+	spec_name: create_runtime_str!("resonance-pow"),
+	impl_name: create_runtime_str!("resonance-pow"),
+	spec_version: 1,
 	impl_version: 1,
 	apis: apis::RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 	state_version: 1,
+	authoring_version: 1,
 };
 
-mod block_times {
-	/// This determines the average expected block time that we are targeting. Blocks will be
-	/// produced at a minimum duration defined by `SLOT_DURATION`. `SLOT_DURATION` is picked up by
-	/// `pallet_timestamp` which is in turn picked up by `pallet_aura` to implement `fn
-	/// slot_duration()`.
-	///
-	/// Change this to adjust the block time.
-	pub const MILLI_SECS_PER_BLOCK: u64 = 6000;
-
-	// NOTE: Currently it is not possible to change the slot duration after the chain has started.
-	// Attempting to do so will brick block production.
-	pub const SLOT_DURATION: u64 = MILLI_SECS_PER_BLOCK;
-}
-pub use block_times::*;
 
 // Time is measured by number of blocks.
-pub const MINUTES: BlockNumber = 60_000 / (MILLI_SECS_PER_BLOCK as BlockNumber);
-pub const HOURS: BlockNumber = MINUTES * 60;
-pub const DAYS: BlockNumber = HOURS * 24;
+// pub const MINUTES: BlockNumber = 60_000 / (MILLI_SECS_PER_BLOCK as BlockNumber);
+// pub const HOURS: BlockNumber = MINUTES * 60;
+// pub const DAYS: BlockNumber = HOURS * 24;
 
 pub const BLOCK_HASH_COUNT: BlockNumber = 2400;
 
@@ -177,7 +159,6 @@ pub type Executive = frame_executive::Executive<
 	frame_system::ChainContext<Runtime>,
 	Runtime,
 	AllPalletsWithSystem,
-	Migrations,
 >;
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -202,12 +183,6 @@ mod runtime {
 
 	#[runtime::pallet_index(1)]
 	pub type Timestamp = pallet_timestamp;
-
-	#[runtime::pallet_index(2)]
-	pub type Aura = pallet_aura;
-
-	#[runtime::pallet_index(3)]
-	pub type Grandpa = pallet_grandpa;
 
 	#[runtime::pallet_index(4)]
 	pub type Balances = pallet_balances;

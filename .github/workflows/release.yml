@@ -62,4 +62,4 @@ jobs:
         with:
           files: |
             target/release/solochain-template-node
-            target/release/wbuild/solochain-template-runtime/solochain_template_runtime.compact.compressed.wasm
+            target/release/wbuild/resonance-runtime-1/resonance_runtime_1.compact.compressed.wasm
