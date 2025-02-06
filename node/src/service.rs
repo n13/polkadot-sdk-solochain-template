@@ -180,7 +180,7 @@ pub fn new_full<
         keystore_container,
         select_chain,
         transaction_pool,
-        other: (pow_block_import, telemetry),
+        other: (pow_block_import, mut telemetry),
     } = new_partial(&config)?;
 
     let mut net_config = sc_network::config::FullNetworkConfiguration::<

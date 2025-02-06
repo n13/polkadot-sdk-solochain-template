@@ -43,7 +43,7 @@ use sp_version::RuntimeVersion;
 use super::{
 	AccountId, Balance, Block, Executive, InherentDataExt, Nonce, Runtime,
 	RuntimeCall, RuntimeGenesisConfig, 
-	//SessionKeys, 
+	SessionKeys, 
 	System, TransactionPayment, VERSION,
 };
 
@@ -110,6 +110,18 @@ impl_runtime_apis! {
 	impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
 		fn offchain_worker(header: &<Block as BlockT>::Header) {
 			Executive::offchain_worker(header)
+		}
+	}
+
+	impl sp_session::SessionKeys<Block> for Runtime {
+		fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
+			SessionKeys::generate(seed)
+		}
+
+		fn decode_session_keys(
+			encoded: Vec<u8>,
+		) -> Option<Vec<(Vec<u8>, KeyTypeId)>> {
+			SessionKeys::decode_into_raw_public_keys(&encoded)
 		}
 	}
 

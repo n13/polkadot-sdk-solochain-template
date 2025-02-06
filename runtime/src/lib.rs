@@ -48,6 +48,14 @@ pub mod opaque {
 	pub type Hash = <BlakeTwo256 as HashT>::Output;
 }
 
+impl_opaque_keys! {
+	pub struct SessionKeys {
+		//pub qpow: QPoW,
+		//QPoW doesn't have session keys ? - TODO - check it
+		//We could have something like this: pub qpow: sp_consensus_qpow::AuthorityId,
+	}
+}
+
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
 #[sp_version::runtime_version]
