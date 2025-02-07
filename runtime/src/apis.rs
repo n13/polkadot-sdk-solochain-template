@@ -76,6 +76,8 @@ impl_runtime_apis! {
 		}
 	}
 
+	impl sp_consensus_pow::TimestampApi<Block, u64> for Runtime {
+		fn timestamp() -> u64 {
 			pallet_timestamp::Pallet::<Runtime>::get()
 		}
 	}

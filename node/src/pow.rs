@@ -58,4 +58,16 @@ impl<B: BlockT> PowAlgorithm<B> for PowAlgorithmImpl {
         // Check if the hash value meets the difficulty target
         Ok(hash_num <= difficulty)
     }
+    
+    fn preliminary_verify(
+            &self,
+            _pre_hash: &<B as BlockT>::Hash,
+            _seal: &Seal,
+        ) -> Result<Option<bool>, Error<B>> {
+            Ok(None)
+        }
+    
+    fn break_tie(&self, _own_seal: &Seal, _new_seal: &Seal) -> bool {
+            false
+        }
 }
