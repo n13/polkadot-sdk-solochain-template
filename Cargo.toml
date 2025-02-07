@@ -21,6 +21,7 @@ futures-timer = "3.0.2"
 log = { version = "0.4.22", default-features = true }
 parking_lot = { version = "0.12.1", default-features = true }
 prometheus-endpoint = { version = "0.17.1", default-features = true, package = "substrate-prometheus-endpoint" }
+sp-consensus-pow = { path = "./pallets/sp-consensus-pow", default-features = false }
 
 resonance-runtime-1 = { path = "./runtime", default-features = false }
 pallet-template = { path = "./pallets/template", default-features = false }

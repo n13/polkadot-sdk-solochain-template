@@ -6371,6 +6371,7 @@ dependencies = [
  "scale-info",
  "sp-api",
  "sp-block-builder",
+ "sp-consensus-pow",
  "sp-core",
  "sp-genesis-builder",
  "sp-inherents",

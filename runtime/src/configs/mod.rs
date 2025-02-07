@@ -47,6 +47,8 @@ use super::{
 };
 
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
+// For PoW, we can have a shorter block time than PoS
+pub const MINIMUM_PERIOD: u64 = 1000; // 1 second in milliseconds
 
 parameter_types! {
 	pub const BlockHashCount: BlockNumber = 2400;
@@ -59,6 +61,8 @@ parameter_types! {
 	);
 	pub RuntimeBlockLength: BlockLength = BlockLength::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
 	pub const SS58Prefix: u8 = 42;
+	pub const MinimumPeriod: u64 = MINIMUM_PERIOD;
+	pub FeeMultiplier: Multiplier = Multiplier::one();
 }
 
 /// The default types are being injected by [`derive_impl`](`frame_support::derive_impl`) from
@@ -92,11 +96,13 @@ impl frame_system::Config for Runtime {
 }
 
 impl pallet_timestamp::Config for Runtime {
-	type Moment = u64;
-	type OnTimestampSet = ();
-	type MinimumPeriod = ConstU64<5000>;
-	type WeightInfo = ();
+    /// A timestamp: milliseconds since the unix epoch.
+    type Moment = u64;
+    type OnTimestampSet = ();  // No Aura for PoW
+    type MinimumPeriod = MinimumPeriod;
+    type WeightInfo = pallet_timestamp::weights::SubstrateWeight<Runtime>;
 }
+
 
 impl pallet_balances::Config for Runtime {
 	type MaxLocks = ConstU32<50>;
@@ -114,10 +120,6 @@ impl pallet_balances::Config for Runtime {
 	type MaxFreezes = VariantCountOf<RuntimeFreezeReason>;
 	type RuntimeHoldReason = RuntimeHoldReason;
 	type RuntimeFreezeReason = RuntimeHoldReason;
-}
-
-parameter_types! {
-	pub FeeMultiplier: Multiplier = Multiplier::one();
 }
 
 impl pallet_transaction_payment::Config for Runtime {

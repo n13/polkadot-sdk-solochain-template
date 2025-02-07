@@ -53,6 +53,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		],
 		true,
 	))
+	// Add protocol ID if needed
+	.with_protocol_id("pow-dev")
 	.build())
 }
 
@@ -91,19 +93,30 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
-	// initial_authorities: Vec<(AuraId, GrandpaId)>,
-	root_key: AccountId,
-	endowed_accounts: Vec<AccountId>,
-	_enable_println: bool,
+    root_key: AccountId,
+    endowed_accounts: Vec<AccountId>,
+    _enable_println: bool,
 ) -> serde_json::Value {
-	serde_json::json!({
-		"balances": {
-			// Configure endowed accounts with initial balance of 1 << 60.
-			"balances": endowed_accounts.iter().cloned().map(|k| (k, 1u64 << 60)).collect::<Vec<_>>(),
-		},
-		"sudo": {
-			// Assign network admin rights.
-			"key": Some(root_key),
-		},
-	})
+    serde_json::json!({
+        "balances": {
+            // Configure endowed accounts with initial balance of 1 << 60.
+            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1u64 << 60)).collect::<Vec<_>>(),
+        },
+        "sudo": {
+            // Assign network admin rights.
+            "key": Some(root_key),
+        },
+        // Add timestamp configuration
+        "timestamp": {
+            // Set the minimum period between blocks.
+            // For PoW, this is typically lower than for PoS chains
+            "minimumPeriod": 1000, // 1 second in milliseconds
+        },
+        // Add PoW configuration if you have a specific pallet for it
+        "pow": {
+            // Initial mining difficulty
+            "initialDifficulty": u128::MAX - 1,
+        },
+    })
 }
+

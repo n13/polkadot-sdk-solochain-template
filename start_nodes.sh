@@ -6,6 +6,40 @@ pkill -f solochain-template-node
 # Clean up old chain data
 rm -rf /tmp/validator1 /tmp/validator2 /tmp/listener
 
+# ----------------------------------------
+# 1) Insert keys for Validator1 (Alice)
+# ----------------------------------------
+./target/release/solochain-template-node key insert \
+  --base-path /tmp/validator1 \
+  --chain custom-spec-raw.json \
+  --scheme Sr25519 \
+  --suri "//Alice" \
+  --key-type aura
+
+./target/release/solochain-template-node key insert \
+  --base-path /tmp/validator1 \
+  --chain custom-spec-raw.json \
+  --scheme Ed25519 \
+  --suri "//Alice" \
+  --key-type gran
+
+# ----------------------------------------
+# 2) Insert keys for Validator2 (Bob)
+# ----------------------------------------
+./target/release/solochain-template-node key insert \
+  --base-path /tmp/validator2 \
+  --chain custom-spec-raw.json \
+  --scheme Sr25519 \
+  --suri "//Bob" \
+  --key-type aura
+
+./target/release/solochain-template-node key insert \
+  --base-path /tmp/validator2 \
+  --chain custom-spec-raw.json \
+  --scheme Ed25519 \
+  --suri "//Bob" \
+  --key-type gran
+
 # -----------------------------
 # 1) Start Validator1
 #    WebSocket on 127.0.0.1:9944
@@ -14,6 +48,7 @@ rm -rf /tmp/validator1 /tmp/validator2 /tmp/listener
   --base-path /tmp/validator1 \
   --chain custom-spec-raw.json \
   --port 30333 \
+  --prometheus-port 9615 \
   --validator \
   --name Validator1 \
   --experimental-rpc-endpoint "listen-addr=127.0.0.1:9944,methods=unsafe,cors=all" \
@@ -46,6 +81,7 @@ echo "Validator1 Peer ID: $VALIDATOR_1_PEER_ID"
   --base-path /tmp/validator2 \
   --chain custom-spec-raw.json \
   --port 30334 \
+  --prometheus-port 9616 \
   --validator \
   --name Validator2 \
   --node-key bbb5338fe3dbe14aacde7465aac6606ce22a9630ad63978030224764d6fb2c51 \
@@ -61,6 +97,7 @@ echo "Validator1 Peer ID: $VALIDATOR_1_PEER_ID"
   --base-path /tmp/listener \
   --chain custom-spec-raw.json \
   --port 30335 \
+  --prometheus-port 9617 \
   --name Listener \
   --experimental-rpc-endpoint "listen-addr=127.0.0.1:9946,methods=unsafe,cors=all" \
   --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/$VALIDATOR_1_PEER_ID \

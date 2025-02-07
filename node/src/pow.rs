@@ -16,6 +16,7 @@ impl<B: BlockT> PowAlgorithm<B> for PowAlgorithmImpl {
 
     fn difficulty(&self, _parent: B::Hash) -> Result<Self::Difficulty, Error<B>> {
         // Set the difficulty to u128::MAX - 1 to make mining easier.
+        // TODO retrieve this from the client API instead... 
         Ok(u128::MAX - 1)
     }
 
