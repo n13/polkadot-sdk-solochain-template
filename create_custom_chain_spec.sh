@@ -2,14 +2,15 @@
 
 # first build the project then run this
 
-cargo build
+cargo build --release
 
 ./target/release/solochain-template-node \
   build-spec \
   --chain dev \
   --disable-default-bootnode > custom-spec.json
 
-  ./target/release/solochain-template-node \
+./target/release/solochain-template-node \
   build-spec \
   --chain custom-spec.json \
-  --raw > custom-spec-raw.json
+  --raw \
+  --disable-default-bootnode > custom-spec-raw.json
