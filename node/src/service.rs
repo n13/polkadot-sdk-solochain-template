@@ -192,6 +192,8 @@ pub fn new_full<
 
     let peer_store_handle = net_config.peer_store_handle();
 
+    println!("Building network now");
+
     let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
@@ -235,18 +237,28 @@ pub fn new_full<
     let name = config.network.node_name.clone();
     let prometheus_registry = config.prometheus_registry().cloned();
 
-    let rpc_extensions_builder = {
-        let client = client.clone();
-        let pool = transaction_pool.clone();
+    println!("extensions builder runs...");
 
-        Box::new(move |_| {
-            let deps = crate::rpc::FullDeps {
-                client: client.clone(),
-                pool: pool.clone(),
-            };
-            crate::rpc::create_full(deps).map_err(Into::into)
-        })
+    let deps = crate::rpc::FullDeps {
+        client: client.clone(),
+        pool: transaction_pool.clone(),
     };
+    
+    let rpc_extensions_builder = match crate::rpc::create_full(deps) {
+        Ok(builder) => builder,
+        Err(e) => {
+            println!("Error building RPC extensions: {:?}", e);
+            return Err(e.into());
+        }
+    };
+    
+    println!("done building dependencies and RPC node!");
+    
+    let rpc_extensions_builder = Box::new(move |_| {
+        Ok(rpc_extensions_builder.clone())
+    }) as Box<dyn Fn(_) -> Result<_, sc_service::Error>>;
+
+    println!("Spawn network tasks");
 
     let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
         network: Arc::new(network.clone()),

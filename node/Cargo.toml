@@ -79,6 +79,7 @@ substrate-frame-rpc-system.default-features = true
 frame-benchmarking-cli.workspace = true
 frame-benchmarking-cli.default-features = true
 resonance-runtime-1.workspace = true
+sp-session.workspace =true
 
 [build-dependencies]
 substrate-build-script-utils.workspace = true
