@@ -2,14 +2,11 @@
 
 use futures::FutureExt;
 use sc_client_api::{Backend, BlockBackend};
-use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
-use sc_consensus_grandpa::SharedVoterState;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpSyncConfig};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sha3pow::{Compute, MinimalSha3Algorithm};
 use solochain_template_runtime::{self, apis::RuntimeApi, opaque::Block};
-use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use sp_core::{H256, U256};
 use sp_inherents::CreateInherentDataProviders;
 
@@ -24,10 +21,6 @@ pub(crate) type FullClient = sc_service::TFullClient<
 >;
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
-
-/// The minimum period of blocks on which justifications will be
-/// imported and generated.
-const GRANDPA_JUSTIFICATION_PERIOD: u32 = 512;
 
 pub type PowBlockImport = sc_consensus_pow::PowBlockImport<
     Block,
@@ -146,25 +139,6 @@ pub fn new_full<
     >::new(&config.network, config.prometheus_registry().cloned());
     let metrics = N::register_notification_metrics(config.prometheus_registry());
 
-    // let peer_store_handle = net_config.peer_store_handle();
-    // let grandpa_protocol_name = sc_consensus_grandpa::protocol_standard_name(
-    // 	&client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
-    // 	&config.chain_spec,
-    // );
-    // let (grandpa_protocol_config, grandpa_notification_service) =
-    // 	sc_consensus_grandpa::grandpa_peers_set_config::<_, N>(
-    // 		grandpa_protocol_name.clone(),
-    // 		metrics.clone(),
-    // 		peer_store_handle,
-    // 	);
-    // net_config.add_notification_protocol(grandpa_protocol_config);
-
-    // let warp_sync = Arc::new(sc_consensus_grandpa::warp_proof::NetworkProvider::new(
-    // 	backend.clone(),
-    // 	grandpa_link.shared_authority_set().clone(),
-    // 	Vec::default(),
-    // ));
-
     let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
@@ -201,10 +175,6 @@ pub fn new_full<
     }
 
     let role = config.role;
-    // let force_authoring = config.force_authoring;
-    // let backoff_authoring_blocks: Option<()> = None;
-    // let name = config.network.node_name.clone();
-    // let enable_grandpa = !config.disable_grandpa;
     let prometheus_registry = config.prometheus_registry().cloned();
 
     let rpc_extensions_builder = {
@@ -236,51 +206,6 @@ pub fn new_full<
     })?;
 
     if role.is_authority() {
-        // let proposer_factory = sc_basic_authorship::ProposerFactory::new(
-        // 	task_manager.spawn_handle(),
-        // 	client.clone(),
-        // 	transaction_pool.clone(),
-        // 	prometheus_registry.as_ref(),
-        // 	telemetry.as_ref().map(|x| x.handle()),
-        // );
-
-        // let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
-
-        // let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _>(
-        // 	StartAuraParams {
-        // 		slot_duration,
-        // 		client,
-        // 		select_chain,
-        // 		block_import,
-        // 		proposer_factory,
-        // 		create_inherent_data_providers: move |_, ()| async move {
-        // 			let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
-
-        // 			let slot =
-        // 				sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-        // 					*timestamp,
-        // 					slot_duration,
-        // 				);
-
-        // 			Ok((slot, timestamp))
-        // 		},
-        // 		force_authoring,
-        // 		backoff_authoring_blocks,
-        // 		keystore: keystore_container.keystore(),
-        // 		sync_oracle: sync_service.clone(),
-        // 		justification_sync_link: sync_service.clone(),
-        // 		block_proposal_slot_portion: SlotProportion::new(2f32 / 3f32),
-        // 		max_block_proposal_slot_portion: None,
-        // 		telemetry: telemetry.as_ref().map(|x| x.handle()),
-        // 		compatibility_mode: Default::default(),
-        // 	},
-        // )?;
-
-        // // the AURA authoring task is considered essential, i.e. if it
-        // // fails we take down the service with it.
-        // task_manager
-        // 	.spawn_essential_handle()
-        // 	.spawn_blocking("aura", Some("block-authoring"), aura);
 
         let proposer = sc_basic_authorship::ProposerFactory::new(
             task_manager.spawn_handle(),

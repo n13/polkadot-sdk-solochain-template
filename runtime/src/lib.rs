@@ -50,8 +50,8 @@ pub mod opaque {
 
 impl_opaque_keys! {
 	pub struct SessionKeys {
-		pub aura: Aura,
-		pub grandpa: Grandpa,
+		// pub a*ura: A*ura,
+		// pub g*randpa: G*randpa,
 	}
 }
 
@@ -74,25 +74,26 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	state_version: 1,
 };
 
-mod block_times {
-	/// This determines the average expected block time that we are targeting. Blocks will be
-	/// produced at a minimum duration defined by `SLOT_DURATION`. `SLOT_DURATION` is picked up by
-	/// `pallet_timestamp` which is in turn picked up by `pallet_aura` to implement `fn
-	/// slot_duration()`.
-	///
-	/// Change this to adjust the block time.
-	pub const MILLI_SECS_PER_BLOCK: u64 = 6000;
+// this seems to be aura related??
+// mod block_times {
+// 	/// This determines the average expected block time that we are targeting. Blocks will be
+// 	/// produced at a minimum duration defined by `SLOT_DURATION`. `SLOT_DURATION` is picked up by
+// 	/// `pallet_timestamp` which is in turn picked up by `pallet_aura` to implement `fn
+// 	/// slot_duration()`.
+// 	///
+// 	/// Change this to adjust the block time.
+// 	pub const MILLI_SECS_PER_BLOCK: u64 = 6000;
 
-	// NOTE: Currently it is not possible to change the slot duration after the chain has started.
-	// Attempting to do so will brick block production.
-	pub const SLOT_DURATION: u64 = MILLI_SECS_PER_BLOCK;
-}
-pub use block_times::*;
+// 	// NOTE: Currently it is not possible to change the slot duration after the chain has started.
+// 	// Attempting to do so will brick block production.
+// 	pub const SLOT_DURATION: u64 = MILLI_SECS_PER_BLOCK;
+// }
+// pub use block_times::*;
 
 // Time is measured by number of blocks.
-pub const MINUTES: BlockNumber = 60_000 / (MILLI_SECS_PER_BLOCK as BlockNumber);
-pub const HOURS: BlockNumber = MINUTES * 60;
-pub const DAYS: BlockNumber = HOURS * 24;
+// pub const MINUTES: BlockNumber = 60_000 / (MILLI_SECS_PER_BLOCK as BlockNumber);
+// pub const HOURS: BlockNumber = MINUTES * 60;
+// pub const DAYS: BlockNumber = HOURS * 24;
 
 pub const BLOCK_HASH_COUNT: BlockNumber = 2400;
 
@@ -204,21 +205,15 @@ mod runtime {
 	pub type Timestamp = pallet_timestamp;
 
 	#[runtime::pallet_index(2)]
-	pub type Aura = pallet_aura;
-
-	#[runtime::pallet_index(3)]
-	pub type Grandpa = pallet_grandpa;
-
-	#[runtime::pallet_index(4)]
 	pub type Balances = pallet_balances;
 
-	#[runtime::pallet_index(5)]
+	#[runtime::pallet_index(3)]
 	pub type TransactionPayment = pallet_transaction_payment;
 
-	#[runtime::pallet_index(6)]
+	#[runtime::pallet_index(4)]
 	pub type Sudo = pallet_sudo;
 
 	// Include the custom logic from the pallet-template in the runtime.
-	#[runtime::pallet_index(7)]
+	#[runtime::pallet_index(5)]
 	pub type TemplateModule = pallet_template;
 }

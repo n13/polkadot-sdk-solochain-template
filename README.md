@@ -1,5 +1,9 @@
 # Substrate Node Template
 
+PoW proof of concept. 
+
+....
+
 A fresh [Substrate](https://substrate.io/) node, ready for hacking :rocket:
 
 A standalone version of this template is available for each release of Polkadot
@@ -154,7 +158,7 @@ following:
   forks](https://docs.substrate.io/fundamentals/consensus/#finalization-and-forks)
   and other [consensus
   mechanisms](https://docs.substrate.io/fundamentals/consensus/#default-consensus-models)
-  such as Aura for block authoring and GRANDPA for finality.
+  such as A*ura for block authoring and G*RANDPA for finality.
 
 
 ### Runtime
