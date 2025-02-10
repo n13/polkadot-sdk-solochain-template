@@ -10,10 +10,15 @@ members = [
     "node",
     "pallets/template",
     "runtime",
+    "sha3pow",
 ]
 resolver = "2"
 
 [workspace.dependencies]
+sp-consensus = { version = "0.40.0", default-features = false }
+sc-consensus-pow = { version = "0.44.0", default-features = false }
+sp-consensus-pow = { version = "0.40.0", default-features = false }
+
 solochain-template-runtime = { path = "./runtime", default-features = false }
 pallet-template = { path = "./pallets/template", default-features = false }
 clap = { version = "4.5.10" }
