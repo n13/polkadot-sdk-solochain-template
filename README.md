@@ -28,7 +28,7 @@ However, there is no complete documentation on how to create a functional proof 
 As a code diff, these changes can be seen in this PR
 https://github.com/n13/polkadot-sdk-solochain-template/pull/2/files#diff-6c15db9ef4d25bf8d95da7207e2037a70e0e8701855508700b5858bec62bbf1e
 
-
+## OG Substrate README
 ....
 
 A fresh [Substrate](https://substrate.io/) node, ready for hacking :rocket:
