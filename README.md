@@ -1,6 +1,33 @@
 # Substrate Node Template
 
-PoW proof of concept. 
+## Proof of Work Proof of Concept. 
+
+There's a working substrate PoS branch, and master has the proof of concept for a PoW Substrate chain. 
+
+It's basically just the consensus algorithm swapped out, using sc_consensus_pow and sp_consensus_pow pallets, as well as a minimal concept proof of work algorithm to do mining. 
+
+It works. 
+
+However, there is no complete documentation on how to create a functional proof of work chain. 
+
+### Overview how-to
+
+- Add the polkadot pow pallets
+- Remove Aura and Grandpa pallets and all related code
+- Edit service.rs and runtime/lib.rs to add PoW
+- implement PowBlockImport
+- Implement minimal PowAlgorithm struct (from sc_consensus_pow)
+- In node main.rs, add #![feature(type_alias_impl_trait)] directive
+- Modify PartialComponents type, remove Aura, add Pow
+- in service.rs reimplement new_partial so it has a Pow Block Import queue
+- same file, reimplement new_full to call sc_consensus_pow::start_mining_worker - a complex function returning a MiningHandle
+- spawn this mining handle task
+- implement PoW mining algo using mining handle to submit blocks, check metadata, etc.
+- modify runtime to remove aura, modify session keys - session keys are still needed
+
+As a code diff, these changes can be seen in this PR
+https://github.com/n13/polkadot-sdk-solochain-template/pull/2/files#diff-6c15db9ef4d25bf8d95da7207e2037a70e0e8701855508700b5858bec62bbf1e
+
 
 ....
 
