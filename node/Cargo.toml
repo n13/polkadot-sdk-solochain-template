@@ -15,6 +15,15 @@ build = "build.rs"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
+sp-consensus = { workspace = true }
+sc-consensus-pow = { version = "0.44.0", default-features = false }
+sp-consensus-pow = { version = "0.40.0", default-features = false }
+log = { workspace = true }
+codec = { workspace = true }
+
+# local packages
+sha3pow = { path = '../sha3pow' }
+
 clap = { features = ["derive"], workspace = true }
 futures = { features = ["thread-pool"], workspace = true }
 serde_json = { workspace = true, default-features = true }
@@ -37,16 +46,8 @@ sc-transaction-pool-api.workspace = true
 sc-transaction-pool-api.default-features = true
 sc-offchain.workspace = true
 sc-offchain.default-features = true
-sc-consensus-aura.workspace = true
-sc-consensus-aura.default-features = true
-sp-consensus-aura.workspace = true
-sp-consensus-aura.default-features = true
 sc-consensus.workspace = true
 sc-consensus.default-features = true
-sc-consensus-grandpa.workspace = true
-sc-consensus-grandpa.default-features = true
-sp-consensus-grandpa.workspace = true
-sp-consensus-grandpa.default-features = true
 sc-client-api.workspace = true
 sc-client-api.default-features = true
 sc-basic-authorship.workspace = true
